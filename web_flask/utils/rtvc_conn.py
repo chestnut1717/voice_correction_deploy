@@ -22,13 +22,14 @@ def get_wav(wav, sr, text):
 
     # encoder -> syn
     response1 = requests.request("POST", url1, headers=headers, data=wav_json)
-    print(response1)
     print('response1 완료')
-
+    embed = dict(eval(response1.json()))
     encoder_request_data = json.dumps({
-        "embed": response1.json(),
+        "embed": embed['embed'],
         "text": text
     })
+
+    print(response1.json())
 
     #syn -> vocoder
     response2 = requests.request("POST", url2, headers=headers, data=encoder_request_data)
@@ -36,8 +37,9 @@ def get_wav(wav, sr, text):
 
     print('response2 완료')
 
+    spec = dict(eval(response2.json()))
     vocoder_request_data = json.dumps({
-        "spec": response2.json(),
+        "spec": spec['spec'],
         "sr": sr
     })
 
