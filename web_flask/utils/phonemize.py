@@ -2,17 +2,21 @@ from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 from phonemizer import phonemize
 import torch
 import numpy as np
+import os
+
+global path
+path = os.getcwd()
 
 def load_tokenizer():
     # model과 tokenizer pre-trained된 것 가져오기
 
-    tokenizer = Wav2Vec2Tokenizer.from_pretrained("C:/Users//User1//Desktop//project//voice_correction_deaf//web_flask//tokenizer")
+    tokenizer = Wav2Vec2Tokenizer.from_pretrained(path + "//tokenizer")
     # tokenizer.save_pretrained("/tokenizer")
 
     return tokenizer
 
 def load_model():
-    model = Wav2Vec2ForCTC.from_pretrained("C:/Users//User1//Desktop//project//voice_correction_deaf//web_flask//model")
+    model = Wav2Vec2ForCTC.from_pretrained(path + "//model")
     # model.save_pretrained("/model")
     return model
 
