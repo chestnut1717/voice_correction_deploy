@@ -51,7 +51,7 @@ def record():
         # 맞춤형 원어민 발화 데이터 저장
         sf.write("database/audio/answer.wav", ans_wav, sr)
         ans_wav, sr = sf.read('database/audio/answer.wav')
-
+        print('audio 저장 완료')
         # text -> phoneme
         model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
         ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)

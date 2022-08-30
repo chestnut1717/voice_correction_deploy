@@ -12,12 +12,13 @@ def load_tokenizer():
 
     tokenizer = Wav2Vec2Tokenizer.from_pretrained(path + "//tokenizer")
     # tokenizer.save_pretrained("/tokenizer")
-
+    print('tokenizer 로드 성공')
     return tokenizer
 
 def load_model():
     model = Wav2Vec2ForCTC.from_pretrained(path + "//model")
     # model.save_pretrained("/model")
+    print('model 로드 성공')
     return model
 
 
