@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+/web_flask/utils/__pycache__
+/web_flask/__pycache__
+/web_flask/model
+/web_flask/tokenizer
+/web_flask/utils/__pycache__
+/web_flask/database/graph
+/web_flask/database/audio/
+
+
+betterFlask.pem

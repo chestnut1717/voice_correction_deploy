@@ -1,0 +1,10 @@
+librosa == 0.8.1
+pydub == 0.25.1
+noisereduce == 2.0.1
+transformers == 4.21.1
+phonemizer == 3.2.1
+torch
+Flask==2.1.2
+flask-restx==0.5.1
+SoundFile==0.10.3.post1
+pymysql==1.0.2
