@@ -146,7 +146,7 @@
 
                   {% endfor %}
                  </div>
-                </div>
+
                 <script>
                   function getTip(button){
                     var phoneme= button.innerHTML;
@@ -157,14 +157,25 @@
                 <div class="feedback_box">
                   <img src="{{ url_for('graph_download', filename='graph_smoothing.png') }}" alt="" style="width: 100%; height: 120%">
                 </div>
+                <button onclick="goBack()" style="margin-top: 3rem; background-color: transparent; width: 10%; border-color: transparent;">
+                  <img src="{{ url_for('static', filename='img/undo.png') }}" style="width: 80%;"/>
+                </button>
 
+                <script>
+                function goBack() {
+                  window.history.back();
+                }
+                </script> 
               </div>
+
             </div>
             <!-- End testimonial item -->
 
 
           </div>
-          <div class="pagination"></div>
+
+        </div>
+
         </div>
 
       </div>

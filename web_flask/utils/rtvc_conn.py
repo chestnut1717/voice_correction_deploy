@@ -49,9 +49,9 @@ def get_wav(wav, sr, text):
     print("response3 완료")
 
 
-    # data from DB
-    conn = mysql_connect()
-    wav_list = conn.get_wav()
+    # conn = mysql_connect()
+    # wav_list = conn.get_wav()
+    wav_list = eval(response3.json())['wav']
     print(len(wav_list))
 
 

@@ -57,7 +57,6 @@ async def connect_server(audio, ans_transcription, sr):
     sf.write("database/audio/answer.wav", ans_wav, sr)
     print('audio 저장 완료')
 
-
 async def main(audio, ans_transcription, sr):
     task1 = asyncio.create_task(get_result(audio, ans_transcription))
     task2 = asyncio.create_task(connect_server(audio, ans_transcription, sr))
@@ -78,7 +77,7 @@ def index():
 
 # Login
 @app.route('/login', methods=['GET', 'POST'])
-def signup():
+def login():
     if request.method == 'POST':
     # db에 저장하는 코드 들어온다
     # return redirect(~~~)
@@ -87,6 +86,15 @@ def signup():
     elif request.method == 'GET':
         return render_template('login.html')
 
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+    # db에 저장하는 코드 들어온다
+    # return redirect(~~~)
+        pass
+
+    elif request.method == 'GET':
+        return render_template('signup.html')
 
 @app.route('/service_qa', methods=["GET", "POST"])
 def record():
