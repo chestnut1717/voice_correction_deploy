@@ -6,10 +6,16 @@ import soundfile as sf
 
 async def get_result(audio, ans_transcription):
 
+    
     # text -> phoneme
-    model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
+    
+    model = await loop.run_in_executor(None, phonemize.load_model)
+    tokenizer = await loop.run_in_executor(None, phonemize.load_tokenizer)
+    # model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
     ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
     ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
+
+
 
     # 음성파일 -> text -> phoneme
     deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
@@ -30,7 +36,9 @@ async def get_result(audio, ans_transcription):
         "correct_list" : correct_list }
 
 async def connect_server(audio, ans_transcription, sr):
-    ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
+    print("서버 연결 시작")
+    ans_wav, sr = await loop.run_in_executor(None, rtvc_conn.get_wav, audio, sr, ans_transcription)
+    # ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
     print(type(ans_wav), ans_wav.shape, sr)
     print("audio 완료")
 
@@ -86,7 +94,13 @@ def record():
         # 전역변수 사용
         ans_transcription = answer
 
-        asyncio.run(main(audio, ans_transcription, sr))
+        global loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(main(audio, ans_transcription, sr))          # main이 끝날 때까지 기다림
+        loop.close()
+
+        # asyncio.run(main(audio, ans_transcription, sr))
         ans_wav, sr = sf.read('database/audio/answer.wav')
 
         # to graph(image)
