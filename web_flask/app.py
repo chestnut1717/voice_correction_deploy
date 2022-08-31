@@ -4,21 +4,31 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from utils import preprocessing, phonemize, result, link_mysql, rtvc_conn
 import soundfile as sf
 
+global model, tokenizer
+model = phonemize.load_model()
+tokenizer = phonemize.load_tokenizer()
+
+
 async def get_result(audio, ans_transcription):
 
-    
+
     # text -> phoneme
     
-    model = await loop.run_in_executor(None, phonemize.load_model)
-    tokenizer = await loop.run_in_executor(None, phonemize.load_tokenizer)
+    # model = await loop.run_in_executor(None, phonemize.load_model)
+    # tokenizer = await loop.run_in_executor(None, phonemize.load_tokenizer)
     # model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
-    ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
-    ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
+    ans_phoneme = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, False)
+    ans_phoneme_stress = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, True)
+
+    # ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
+    # ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
 
 
 
     # 음성파일 -> text -> phoneme
-    deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
+    deaf_transcription, deaf_phoneme = await loop.run_in_executor(None, phonemize.speak_to_phoneme, audio, tokenizer, model, False)
+
+    # deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
 
     # 점수 매기고 피드백 부분
     # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
