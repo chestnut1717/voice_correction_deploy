@@ -1,9 +1,53 @@
 # app.py
+import asyncio
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from utils import preprocessing, phonemize, result, link_mysql, rtvc_conn
 import soundfile as sf
 
-global answer
+async def get_result(audio, ans_transcription):
+
+    # text -> phoneme
+    model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
+    ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
+    ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
+
+    # 음성파일 -> text -> phoneme
+    deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
+
+    # 점수 매기고 피드백 부분
+    # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
+    lcs = result.lcs_algo(ans_phoneme, deaf_phoneme, len(ans_phoneme), len(deaf_phoneme))
+    accuracy, score = result.calculate_acc(ans_phoneme, lcs)
+
+    # highlight
+    correct_list = result.highlight(ans_phoneme, lcs)
+
+
+    global data
+    data = {"answer" : [ans_transcription, ans_phoneme_stress],
+        "deaf" : [deaf_transcription, deaf_phoneme],
+        "result": [accuracy, score],
+        "correct_list" : correct_list }
+
+async def connect_server(audio, ans_transcription, sr):
+    ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
+    print(type(ans_wav), ans_wav.shape, sr)
+    print("audio 완료")
+
+    
+    # 맞춤형 원어민 발화 데이터 저장
+    sf.write("database/audio/answer.wav", ans_wav, sr)
+    print('audio 저장 완료')
+
+
+async def main(audio, ans_transcription, sr):
+    task1 = asyncio.create_task(get_result(audio, ans_transcription))
+    task2 = asyncio.create_task(connect_server(audio, ans_transcription, sr))
+    await task2
+    await task1
+
+
+    print("모두 작업 완료")
 
 
 #Flask 객체 인스턴스 생성
@@ -28,6 +72,63 @@ def signup():
 
 @app.route('/service_qa', methods=["GET", "POST"])
 def record():
+    if request.method == "GET":
+        global answer       
+
+        context, question, answer = link_mysql.load_context()
+        return render_template('service_qa.html', data={"context" : context,
+                                                        "question" : question,
+                                                        "answer"  : answer})
+
+    elif request.method == 'POST':
+
+        audio, sr = preprocessing.blob_to_wav(request)
+        # 전역변수 사용
+        ans_transcription = answer
+
+        asyncio.run(main(audio, ans_transcription, sr))
+        ans_wav, sr = sf.read('database/audio/answer.wav')
+
+        # to graph(image)
+        result.to_graph(ans_wav, audio, smoothing=True)
+        print("그래프 완료")
+
+
+        return redirect(url_for('feedback'))
+
+
+@app.route('/feedback', methods=['GET'])
+def feedback():
+    return render_template('feedback.html', data=data)
+
+@app.route('/database/<filename>')
+def database_download(filename):
+    return send_from_directory('database', filename)
+
+# 동영상
+@app.route('/database/video/<filename>')
+def video_download(filename):
+    return send_from_directory('database/video', filename)
+
+@app.route('/database/image/<filename>')
+def image_download(filename):
+    return send_from_directory('database/image', filename)
+
+# 그래프
+@app.route('/database/graph/<filename>')
+def graph_download(filename):
+    return send_from_directory('database/graph', filename)
+
+# 오디오
+@app.route('/database/audio/<filename>')
+def audio_download(filename):
+    return send_from_directory('database/audio', filename)
+
+
+
+#backup
+@app.route('/service_qa2', methods=["GET", "POST"])
+def record2():
     if request.method == "GET":
         global answer       
 
@@ -80,34 +181,6 @@ def record():
 
         return redirect(url_for('feedback'))
         # return render_template('feedback.html', data=data)
-
-
-@app.route('/feedback', methods=['GET'])
-def feedback():
-    return render_template('feedback.html', data=data)
-
-@app.route('/database/<filename>')
-def database_download(filename):
-    return send_from_directory('database', filename)
-
-# 동영상
-@app.route('/database/video/<filename>')
-def video_download(filename):
-    return send_from_directory('database/video', filename)
-
-@app.route('/database/image/<filename>')
-def image_download(filename):
-    return send_from_directory('database/image', filename)
-
-# 그래프
-@app.route('/database/graph/<filename>')
-def graph_download(filename):
-    return send_from_directory('database/graph', filename)
-
-# 오디오
-@app.route('/database/audio/<filename>')
-def audio_download(filename):
-    return send_from_directory('database/audio', filename)
 
 
 # 간이 페이지
