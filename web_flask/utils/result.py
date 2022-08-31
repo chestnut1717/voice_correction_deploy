@@ -7,38 +7,51 @@ import matplotlib.pyplot as plt
 import librosa
 import soundfile as sf
 
+def plot_design(ans_rms, deaf_rms, linewidth="4", smoothing=True):
+      plt.figure(figsize=[20,9])
+      plt.plot(ans_rms, color = "Blue",
+                            linewidth = linewidth, 
+                            label="Answer")
+      plt.plot(deaf_rms, color = "Red",
+                            linewidth = linewidth, 
+                            label = "Yours")
+      plt.axis('off')
+      plt.legend(fontsize=30)
+
+      if smoothing:
+        filename = "graph_smoothing.png"
+      else:
+        filename = "graph_not_smoothing.png"
+        
+      plt.savefig("database/graph/" + filename, pad_inches=0)
 
 def to_graph(ans_wav, deaf_wav, smoothing=False):
 
-    rms1, rms2 = librosa.feature.rms(ans_wav), librosa.feature.rms(deaf_wav)
+    ans_rms, deaf_rms = librosa.feature.rms(ans_wav), librosa.feature.rms(deaf_wav)
 
-    new_rms1, new_rms2 = downsample(rms1, rms2)
+    ans_new_rms, deaf_new_rms = downsample(ans_rms, deaf_rms)
     if smoothing == True:
-      new_rms1_sm = moving_average(new_rms1, 10)
-      new_rms2_sm = moving_average(new_rms2, 10)
-      print(new_rms1_sm.shape, new_rms2_sm.shape)
-      plt.figure(figsize=[20,9])
-      plt.plot(new_rms1_sm)
-      plt.plot(new_rms2_sm)
-      plt.savefig('database/graph/graph_smoothing.png')
+      ans_rms_sm = moving_average(ans_new_rms, 10)
+      deaf_rms_sm = moving_average(deaf_new_rms, 10)
+      plot_design(ans_rms_sm, deaf_rms_sm, linewidth="4", smoothing=smoothing)
 
     else:
-      plt.figure([20,9])
-      plt.plot(new_rms1)
-      plt.plot(new_rms2)
-      plt.savefig('database/graph/graph_not_smoothing.png')
+      plot_design(ans_rms, deaf_rms, linewidth="4", smoothing=smoothing)
+
     return None
 
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
 
 # 두 개의 다른 signal 길이 맞춰주는 함수 고안
-def downsample(a, b):
-    a, b = a.flatten(), b.flatten()
-    if len(a) > len(b):
-        target, compare = a, b
+def downsample(ans, deaf):
+    pivot = 0
+    ans, deaf = ans.flatten(), deaf.flatten()
+    if len(ans) > len(deaf):
+        target, compare = ans, deaf
     else:
-        target, compare = b, a
+        target, compare = deaf, ans
+        pivot = 1
 
   # 정규화
     norm = np.linalg.norm(target)
@@ -59,8 +72,14 @@ def downsample(a, b):
         print('percentile')
         print(len(compare)/len(target))
         print(per)
-        sampled_list = target[(target > per)]
-    return compare, np.array(sampled_list)
+        target = np.array(target[(target > per)])
+
+    # target is deaf
+    if pivot == 1:
+      return compare, target
+    # compare is deaf
+    else:
+      return target, compare
 
 
 
