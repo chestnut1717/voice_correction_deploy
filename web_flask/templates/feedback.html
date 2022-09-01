@@ -155,21 +155,24 @@
                     Your browser does not support the audio tag.
                   </audio>
                 </div>
-                <div class="justify-content-center mb-4" role="toolbar" aria-label="Toolbar with button groups" style="margin: 2rem 0 ">
-                  <div class="btn-group me-2" role="group" aria-label="First group"  style="overflow-block: hidden;">
-                  {% for idx in range(data['correct_list']|length) %}
-                      
-                    {% if data['correct_list'][idx][0] == ' ' %}
-                      &nbsp;&nbsp;&nbsp;
-                    {% elif data['correct_list'][idx][1] == 0 %}
-                      <button type="button" onclick="getTip(this)" class="btn btn-danger openModalBtn_dan" id="openModalBtn{{ idx }}">{{ data['correct_list'][idx][0] }}</button>
-                    {% else %}
-                      <button type="button" onclick="getTip(this)" class="btn btn-primary openModalBtn" id="openModalBtn{{ idx }}">{{ data['correct_list'][idx][0] }}</button>
+                <div class="justify-content-center mb-4" role="toolbar" aria-label="Toolbar with button groups">
+                  <div class="overflow-auto">  
+                      <div class="btn-group me-2" role="group" aria-label="First group"  style="overflow-block: hidden;">
+                            {% for idx in range(data['correct_list']|length) %}
+                                
+                              {% if data['correct_list'][idx][0] == ' ' %}
+                                &nbsp;&nbsp;&nbsp;
+                              {% elif data['correct_list'][idx][1] == 0 %}
+                                <button type="button" onclick="getTip(this)" class="btn btn-danger openModalBtn_dan" id="openModalBtn{{ idx }}">{{ data['correct_list'][idx][0] }}</button>
+                              {% else %}
+                                <button type="button" onclick="getTip(this)" class="btn btn-primary openModalBtn" id="openModalBtn{{ idx }}">{{ data['correct_list'][idx][0] }}</button>
 
-                    {% endif %}
+                              {% endif %}
 
-                  {% endfor %}
-                 </div>
+                            {% endfor %}
+                        </div>
+                    <div> 
+                </div>
 
                 <script>
                   function getTip(button){
