@@ -2,11 +2,7 @@ import numpy as np
 import librosa
 import matplotlib.pyplot as plt
 
-import numpy as np
-import matplotlib.pyplot as plt
-import librosa
-import soundfile as sf
-
+# 그래프 디자인 담당 함수
 def plot_design(ans_rms, deaf_rms, linewidth="4", smoothing=True):
       plt.figure(figsize=[20,9])
       plt.plot(ans_rms, color = "Blue",
@@ -25,6 +21,7 @@ def plot_design(ans_rms, deaf_rms, linewidth="4", smoothing=True):
         
       plt.savefig("database/graph/" + filename, pad_inches=0)
 
+# 사용자와 정답 목소리의 pitch 그래프화하는 함수
 def to_graph(ans_wav, deaf_wav, smoothing=False):
 
     ans_rms, deaf_rms = librosa.feature.rms(ans_wav), librosa.feature.rms(deaf_wav)
@@ -40,8 +37,10 @@ def to_graph(ans_wav, deaf_wav, smoothing=False):
 
     return None
 
+# 그래프 평활화
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
+
 
 # 두 개의 다른 signal 길이 맞춰주는 함수 고안
 def downsample(ans, deaf):
@@ -80,7 +79,6 @@ def downsample(ans, deaf):
     # compare is deaf
     else:
       return target, compare
-
 
 
 # LCS 알고리즘을 사용하여 두 string 중에서 겹치는 음소 subsequence 출력 용도

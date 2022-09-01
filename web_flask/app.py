@@ -1,39 +1,30 @@
-# app.py
 import asyncio
-from calendar import c
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-from utils import preprocessing, phonemize, result, link_mysql, rtvc_conn
+from utils import *
 import soundfile as sf
 
+# 처음 서버를 열때 모델 동시 불러옴(배포시 메모리 / 시간절약)
 global model, tokenizer
 model = phonemize.load_model()
 tokenizer = phonemize.load_tokenizer()
 
 
+# 서버로부터 응답시간이 걸리기 때문에 그동안 비동기 처리
 async def get_result(audio, ans_transcription):
 
-
-    # text -> phoneme
-
+    # Answer -> phoneme
     ans_phoneme = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, False)
     ans_phoneme_stress = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, True)
 
-
-
-
-    # 음성파일 -> text -> phoneme
+    # User voice(.wav) -> text -> phoneme
     deaf_transcription, deaf_phoneme = await loop.run_in_executor(None, phonemize.speak_to_phoneme, audio, tokenizer, model, False)
 
-    
-
-    # 점수 매기고 피드백 부분
-    # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
-    lcs = result.lcs_algo(ans_phoneme, deaf_phoneme, len(ans_phoneme), len(deaf_phoneme))
+    # 발음 평가
+    lcs = result.lcs_algo(ans_phoneme, deaf_phoneme, len(ans_phoneme), len(deaf_phoneme))    
     accuracy, score = result.calculate_acc(ans_phoneme, lcs)
 
-    # highlight
+    # 틀린 음소 추출
     correct_list = result.highlight(ans_phoneme, lcs)
-
 
     global data
     data = {"answer" : [ans_transcription, ans_phoneme_stress],
@@ -41,18 +32,19 @@ async def get_result(audio, ans_transcription):
         "result": [accuracy, score],
         "correct_list" : correct_list }
 
+
+# 개별화 음성 제작하기 위해 외부 딥러닝 서버 통신과정
 async def connect_server(audio, ans_transcription, sr):
     print("서버 연결 시작")
     ans_wav, sr = await loop.run_in_executor(None, rtvc_conn.get_wav, audio, sr, ans_transcription)
     # ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
-    print(type(ans_wav), ans_wav.shape, sr)
-    print("audio 완료")
-
     
     # 맞춤형 원어민 발화 데이터 저장
     sf.write("database/audio/answer.wav", ans_wav, sr)
-    print('audio 저장 완료')
+    print('개별화된 audio 저장 완료')
 
+
+# 비동기 처리 메인함수
 async def main(audio, ans_transcription, sr):
     task1 = asyncio.create_task(get_result(audio, ans_transcription))
     task2 = asyncio.create_task(connect_server(audio, ans_transcription, sr))
@@ -60,50 +52,43 @@ async def main(audio, ans_transcription, sr):
     await task1
 
 
-    print("모두 작업 완료")
-
 #Flask 객체 인스턴스 생성
 app = Flask(__name__)
 
-@app.route('/example/1', methods=['GET']) 
-def example():
-    level = request.args.get('level')
-    print(level)
-    return render_template('example.html')
-
+# main page
 @app.route('/', methods=['GET', 'POST']) 
 def index():
-
     # wake external model server
     rtvc_conn.wake_server()
     return render_template('index.html')
+
 
 # Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-    # db에 저장하는 코드 들어온다
-    # return redirect(~~~)
         pass
 
     elif request.method == 'GET':
         return render_template('login.html')
 
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-    # db에 저장하는 코드 들어온다
-    # return redirect(~~~)
         pass
 
     elif request.method == 'GET':
         return render_template('signup.html')
 
+
+# service page
 @app.route('/service_qa/<level>', methods=["GET", "POST"])
 def record(level):
     if request.method == "GET":
         global answer
 
+        # 각 레벨별 사이트에 접속하면 db에서 각 level에 맞는 데이터를 가져온다
         context, question, answer, sentence, blank_answer, title = link_mysql.load_context(level)
 
 
@@ -113,43 +98,40 @@ def record(level):
                                                         "blank_answer": blank_answer,
                                                         "sentence"    : sentence, 
                                                         "title"       : title})
-
+    
     elif request.method == 'POST':
-
+        # 사용자가 음성을 녹음해서 전송하면 다음 명령이 실행
         audio, sr = preprocessing.blob_to_wav(request)
         # 전역변수 사용
         ans_transcription = answer
 
+        # 비동기처리 작업
         global loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(main(audio, ans_transcription, sr))          # main이 끝날 때까지 기다림
         loop.close()
 
-        # asyncio.run(main(audio, ans_transcription, sr))
+        # 처리가 끝나고 개별화된 목소리를 받아온다
         ans_wav, sr = sf.read('database/audio/answer.wav')
 
-        # to graph(image)
+        # 그리고 개별화된 정답 목소리와 사용자 목소리의 pitch 비교
         result.to_graph(ans_wav, audio, smoothing=True)
-        print("그래프 완료")
-
 
         return redirect(url_for('feedback'))
 
 
+# 피드백 화면
 @app.route('/feedback', methods=['GET'])
 def feedback():
     return render_template('feedback.html', data=data)
-
-@app.route('/database/<filename>')
-def database_download(filename):
-    return send_from_directory('database', filename)
 
 # 동영상
 @app.route('/database/video/<filename>')
 def video_download(filename):
     return send_from_directory('database/video', filename)
 
+# 이미지
 @app.route('/database/image/<filename>')
 def image_download(filename):
     return send_from_directory('database/image', filename)
@@ -163,149 +145,6 @@ def graph_download(filename):
 @app.route('/database/audio/<filename>')
 def audio_download(filename):
     return send_from_directory('database/audio', filename)
-
-
-
-#backup
-@app.route('/service_qa2', methods=["GET", "POST"])
-def record2():
-    if request.method == "GET":
-        global answer       
-
-        context, question, answer = link_mysql.load_context()
-        return render_template('service_qa.html', data={"context" : context,
-                                                        "question" : question,
-                                                        "answer"  : answer})
-
-    elif request.method == 'POST':
-
-        audio, sr = preprocessing.blob_to_wav(request)
-
-        # 전역변수 사용
-        ans_transcription = answer
-
-        # real-time voice model로 request
-        ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
-        print(type(ans_wav), ans_wav.shape, sr)
-        print("audio 완료")
-
-        # 맞춤형 원어민 발화 데이터 저장
-        sf.write("database/audio/answer.wav", ans_wav, sr)
-        ans_wav, sr = sf.read('database/audio/answer.wav')
-        print('audio 저장 완료')
-        # text -> phoneme
-        model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
-        ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
-        ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
-
-        # 음성파일 -> text -> phoneme
-        deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
-
-        # 점수 매기고 피드백 부분
-        # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
-        lcs = result.lcs_algo(ans_phoneme, deaf_phoneme, len(ans_phoneme), len(deaf_phoneme))
-        accuracy, score = result.calculate_acc(ans_phoneme, lcs)
-
-        # highlight
-        correct_list = result.highlight(ans_phoneme, lcs)
-
-        # to graph(image)
-        result.to_graph(ans_wav, audio, smoothing=True)
-        print("그래프 완료")
-
-        global data
-        data = {"answer" : [ans_transcription, ans_phoneme_stress],
-            "deaf" : [deaf_transcription, deaf_phoneme],
-            "result": [accuracy, score],
-            "correct_list" : correct_list }
-
-        return redirect(url_for('feedback'))
-        # return render_template('feedback.html', data=data)
-
-
-# 간이 페이지
-@app.route('/service_example', methods=['GET', 'POST'])
-def feedback_example():
-  if request.method == "GET":
-    transcription_list = ["Let's book a holiday!", "She sells ________ by the seashore!", "Can I order burger and chips please?"]
-    context = "When she was a teenager, she sold small pieces of dinosaur bones to people that she found. At that time, many people saw her and said, 'She sells on the seashore.'"
-    question = "What did people say to her?"
-    global answer
-    # answer = transcription_list[0]
-    answer = transcription_list[1]
-    # answer = transcription_list[2]
-
-
-    
-    return render_template('service_qa_example.html', data={"context" : context,
-                                                    "question" : question,
-                                                    "answer"  : answer})
-     # phoneme변환
-  ## -------------------------------------------------##
-  else:
-    # 발화자 목소리
-
-    import librosa
-    # audio, sr = librosa.load('example/holiday_male.wav')
-    # audio, sr = librosa.load('example/seachells_male.wav') 
-    # audio, sr = librosa.load('example/burger_male.wav') 
-
-    # audio, sr = librosa.load('example/holiday_female.wav')
-    audio, sr = librosa.load('example/seachells_female.wav') 
-    # audio, sr = librosa.load('example/burger_female.wav') 
-    print('audio 불러오기 성공!!!!')
-    print(type(audio), sr)
-    print(answer)
-
-    # sf.write("deaf_ex.wav", audio, sr)
-
-    # 전역변수 사용
-    ans_transcription = answer
-    ans_wav, sr = rtvc_conn.get_wav(audio, sr, ans_transcription)
-    print('맞춤형 오디오 만들기 성공!')
-    sf.write("database/audio/answer_ex.wav", ans_wav, sr)
-    ans_wav, sr = sf.read('database/audio/answer_ex.wav')
-
-    
-
-
-    # from scipy.io.wavfile import write
-
-    # write("example.wav", sr, wav.astype(np.float32))
-    model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
-    ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
-    ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
-
-
-    # 음성파일 -> text -> phoneme
-    deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
-
-    # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
-    lcs = result.lcs_algo(ans_phoneme, deaf_phoneme, len(ans_phoneme), len(deaf_phoneme))
-    accuracy, score = result.calculate_acc(ans_phoneme, lcs)
-    
-    print(accuracy)
-
-    # highlight
-    correct_list = result.highlight(ans_phoneme, lcs)
-    print(correct_list)
-
-    # to graph(image)
-    ## ans_wav, deaf_wav
-    result.to_graph(ans_wav, audio, smoothing=True)
-    print('그래프 그리기 성공')
-    global data
-    data = {"answer" : [ans_transcription, ans_phoneme_stress],
-           "deaf" : [deaf_transcription, deaf_phoneme],
-           "result": [accuracy, score],
-          #  "wav" : wav.tolist(),
-          #  "wav_name" : wav_name,
-           "correct_list" : correct_list }
-
-    # result.to_graph(np.array(wav), np.array(audio))
-  ## -------------------------------------------------##
-    return redirect(url_for('feedback')) 
-
 
 
 if __name__=="__main__":

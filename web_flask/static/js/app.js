@@ -33,7 +33,7 @@ if (!window.AudioContext) {
     context = new AudioContext();
 }
 
-// Audio 파일 만들기
+// Audio 파일 만드는 함수
 function playByteArray(byteArray) {
 
     var arrayBuffer = new ArrayBuffer(byteArray.length);
@@ -49,17 +49,7 @@ function playByteArray(byteArray) {
     });
 }
 
-// // Play the loaded file
-// function play() {
-//     // Create a source node from the buffer
-//     var source = context.createBufferSource();
-//     source.buffer = buf;
-//     // Connect to the final output node (the speakers)
-//     source.connect(context.destination);
-//     // Play immediately
-//     source.start(0);
-// }
-
+// 녹음 시작 함수
 function startRecording() {
   console.log("recordButton clicked");
 
@@ -93,6 +83,7 @@ function startRecording() {
   });
 }
 
+// 녹음 정지 함수
 function stopRecording() {
   console.log("stopButton clicked");
 
@@ -112,8 +103,7 @@ function stopRecording() {
 function createDownloadLink(blob) {
   var url = URL.createObjectURL(blob);
   var au = document.createElement('audio');
-  var li = document.createElement('li');
-  var link = document.createElement('a');
+
 
   //name of .wav file to use during upload and download (without extension)
   var filename = new Date().toISOString();
@@ -123,33 +113,16 @@ function createDownloadLink(blob) {
   au.src = url;
 
   //save to disk link
-  link.href = url;
-  link.download = filename+".wav"; //download forces the browser to download the file using the  filename
-  link.innerHTML = "Save to disk";
-
-  // //add the new audio element to li
-  // li.appendChild(au);
-  
-  // //add the filename to the li
-  // li.appendChild(document.createTextNode(filename+".wav "))
-
-  // //add the save to disk link to li
-  // li.appendChild(link);
-
-  // //add the li element to the ol
-  // recordingsList.appendChild(li);
 
     /* button이 클릭되었을때 이벤트 */
-
     var data = new FormData();
+    // form형식으로 음원파일 POST
     data.append('file', blob, 'filename');
 
+
     var xhr = new XMLHttpRequest();
-
-
     data.enctype='multipart/form-data';
     data.method='post';
-    // formdata.action='FormDataResult.jsp';
 
 
     xhr.open('post','{{ request.path }}', true); 
@@ -169,31 +142,12 @@ function createDownloadLink(blob) {
             // https://stackoverflow.com/questions/38926335/flask-redirecturl-for-returning-html-but-not-loading-page
             window.location = "/feedback";
 
-              // document.getElementById("ans_t").innerText = result.answer[0];
-              // document.getElementById("ans_p").innerText = result.answer[1];
-              // document.getElementById("deaf_t").innerText = result.deaf[0];
-              // document.getElementById("deaf_p").innerText = result.deaf[1];
-              // document.getElementById("result_acc").innerText = result.result[0];
-              // document.getElementById("result_score").innerText = result.result[1];
-              // playByteArray(result.wav)
-              // console.log(document.getElementsByClassName("invisible"));
-              // const inv =  document.querySelector('.invisible');
-              // inv.classList.remove('invisible');
-
             } else {
               alert('request에 뭔가 문제가 있어요.');
             }
       }
       };
-    //   /* Post 방식으로 요청 */
-    //   httpRequest.open('POST', '/record', true);
-    //   /* Response Type을 Json으로 사전 정의 */
-    //   httpRequest.responseType = "json";
-    //   /* 요청 Header에 컨텐츠 타입은 Json으로 사전 정의 */
-    //   httpRequest.setRequestHeader('Content-Type', 'application/blob');
-    //   /* 정의된 서버에 Json 형식의 요청 Data를 포함하여 요청을 전송 */
-    //   // httpRequest.send(JSON.stringify(reqJson));
-    // httpRequest.send(data)
+
       
 
   }

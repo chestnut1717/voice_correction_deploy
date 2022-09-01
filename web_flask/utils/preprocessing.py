@@ -5,8 +5,6 @@ from pydub import AudioSegment
 import io
 import soundfile as sf
 
-
-
 class DimentionOverflow(Exception):
     def __init__(self):
       pass
@@ -14,6 +12,7 @@ class DimentionOverflow(Exception):
     def __str__(self):
       return "The dimention is greater than 2"
 
+# noise reduce할 때, ndarray의 차원이 2차원일시 1차원으로 바꿔줌
 def convert_dim(data):
   assert type(data) == np.ndarray, "Data type is wrong"
   # 
@@ -32,6 +31,7 @@ def to_wav(file_path, file_name):
     audSeg.export(f"{file_name}.wav", format="wav")
     print(f'{file_name}.wav convert success!')
 
+# noise 제거
 def reduce_noise(file_path, file_name):
     rate, data = wavfile.read(file_path)
     data_r = convert_dim(data)
