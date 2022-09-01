@@ -3,10 +3,28 @@ import json
 import numpy as np
 from utils.mysql_connect import mysql_connect
 
-# url1 = "http://localhost/encoder/inference/"
 url1 = "https://better-encoder.herokuapp.com/inference/"
 url2 = "https://better-synthesizer.herokuapp.com/inference/"
 url3 = "https://better-vocoder.herokuapp.com/inference/"
+url4 = "https://better-synthesizer.herokuapp.com/inference/"
+
+url_list = [url1, url2, url3, url4]
+
+
+headers = {
+    'Content-Type': 'application/json'
+}
+
+
+def wake_server():
+    for _url in url_list:
+        try:
+            response = requests.request("GET", _url, headers=headers)
+
+        except:
+            print(_url, response)
+            continue
+        print(_url, response)
 
 def get_wav(wav, sr, text):
     wav = wav.tolist()
@@ -16,9 +34,7 @@ def get_wav(wav, sr, text):
         "sr": sr,
         "text": text
     })
-    headers = {
-        'Content-Type': 'application/json'
-    }
+  
 
     # encoder -> syn
     response1 = requests.request("POST", url1, headers=headers, data=wav_json)

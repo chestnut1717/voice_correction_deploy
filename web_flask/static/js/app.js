@@ -152,7 +152,7 @@ function createDownloadLink(blob) {
     // formdata.action='FormDataResult.jsp';
 
 
-    xhr.open('post','/service_qa', true); 
+    xhr.open('post','{{ request.path }}', true); 
     
     xhr.responseType = "json";
 

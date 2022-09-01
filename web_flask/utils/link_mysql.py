@@ -1,7 +1,6 @@
 import pymysql
-import random
 
-def load_context():
+def load_context(level):
     host = "betterdatabase.cyooqkxaxvqu.us-east-1.rds.amazonaws.com"
     username = "admin"
     password = "jung0204"
@@ -14,15 +13,16 @@ def load_context():
                         user=username, passwd=password, 
                         db=database, charset='utf8'
                         )
-    rdm = random.randint(1, 10)
 
-    sql = f"SELECT * FROM better_context_qa where better_context_qa.context_qa_id =  {rdm}"
+
+    sql = f"select context, question, answer, context_blank_sentence, context_black_answer, title FROM level_{level}_book ORDER BY RAND() LIMIT 1;"
+    sql_2 = "SELECT count(*) from level_1_book"
     with db:
         with db.cursor() as cur:
             cur.execute(sql)
             result_sql = cur.fetchall()[0]
 
-           
-    context, question, answer = result_sql[1], result_sql[2], result_sql[3]
+    # random으로 3개 추출!
+    result_sql       
 
-    return context, question, answer
+    return result_sql

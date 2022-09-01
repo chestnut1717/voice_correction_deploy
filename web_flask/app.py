@@ -1,5 +1,6 @@
 # app.py
 import asyncio
+from calendar import c
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from utils import preprocessing, phonemize, result, link_mysql, rtvc_conn
 import soundfile as sf
@@ -13,22 +14,17 @@ async def get_result(audio, ans_transcription):
 
 
     # text -> phoneme
-    
-    # model = await loop.run_in_executor(None, phonemize.load_model)
-    # tokenizer = await loop.run_in_executor(None, phonemize.load_tokenizer)
-    # model, tokenizer = phonemize.load_model(), phonemize.load_tokenizer()
+
     ans_phoneme = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, False)
     ans_phoneme_stress = await loop.run_in_executor(None, phonemize.text_to_phoneme, ans_transcription, True)
 
-    # ans_phoneme = phonemize.text_to_phoneme(ans_transcription, is_stress=False)
-    # ans_phoneme_stress = phonemize.text_to_phoneme(ans_transcription, is_stress=True)
 
 
 
     # 음성파일 -> text -> phoneme
     deaf_transcription, deaf_phoneme = await loop.run_in_executor(None, phonemize.speak_to_phoneme, audio, tokenizer, model, False)
 
-    # deaf_transcription, deaf_phoneme = phonemize.speak_to_phoneme(audio, tokenizer, model, is_stress=False)
+    
 
     # 점수 매기고 피드백 부분
     # https://stackoverflow.com/questions/17365289/how-to-send-audio-wav-file-generated-at-the-server-to-client-browser
@@ -66,13 +62,20 @@ async def main(audio, ans_transcription, sr):
 
     print("모두 작업 완료")
 
-
 #Flask 객체 인스턴스 생성
 app = Flask(__name__)
 
+@app.route('/example/1', methods=['GET']) 
+def example():
+    level = request.args.get('level')
+    print(level)
+    return render_template('example.html')
 
-@app.route('/', methods=['GET']) 
+@app.route('/', methods=['GET', 'POST']) 
 def index():
+
+    # wake external model server
+    rtvc_conn.wake_server()
     return render_template('index.html')
 
 # Login
@@ -96,15 +99,20 @@ def signup():
     elif request.method == 'GET':
         return render_template('signup.html')
 
-@app.route('/service_qa', methods=["GET", "POST"])
-def record():
+@app.route('/service_qa/<level>', methods=["GET", "POST"])
+def record(level):
     if request.method == "GET":
-        global answer       
+        global answer
 
-        context, question, answer = link_mysql.load_context()
-        return render_template('service_qa.html', data={"context" : context,
-                                                        "question" : question,
-                                                        "answer"  : answer})
+        context, question, answer, sentence, blank_answer, title = link_mysql.load_context(level)
+
+
+        return render_template('service_qa.html', data={"level"       : level,
+                                                        "context"     : context,
+                                                        "question"    : question,
+                                                        "blank_answer": blank_answer,
+                                                        "sentence"    : sentence, 
+                                                        "title"       : title})
 
     elif request.method == 'POST':
 
