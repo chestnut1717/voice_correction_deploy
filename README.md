@@ -4,6 +4,11 @@
 접속 : http://example-server.shop/
 
 ## 1. 필요 라이브러리 및 프로그램
+
+### 환경
+- for local : Windows 10. python 3.7, conda virtual env
+- for deploy : Ubuntu(18.04) python 3.7 
+
 ```
 librosa == 0.8.1
 pydub == 0.25.1
@@ -38,7 +43,6 @@ espeak
 
 
 
-
 #### 1.1.2 리눅스(ubuntu 18.04)에서는 다음과 같은 명령어로 바로 깔림
 ```
 sudo apt-get install python-espeak
@@ -69,3 +73,17 @@ sudo apt-get update && sudo apt-get install espeak
 ### 3.2 웹 + 분석모델 서버 - Flask 기반, AWS EC2로 배포(CPU * 1 / RAM : 1G)
 
 ### 3.3 DB - MySQL, AWS RDS
+
+
+## 4. License
+### 4.1 입모양 음성 파일
+- https://www.bbc.co.uk/worldservice/learningenglish/grammar/pron/
+
+### 4.2 Template
+
+```
+Template Name: FlexStart
+Template URL: https://bootstrapmade.com/flexstart-bootstrap-startup-template/
+Author: BootstrapMade.com
+License: https://bootstrapmade.com/license/
+```
