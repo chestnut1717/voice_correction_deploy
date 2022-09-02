@@ -4,7 +4,7 @@
 ![image](https://user-images.githubusercontent.com/62554639/187997853-5cce284f-f17f-4506-89d3-d193365930ef.png)
 
 
-## 1. 필요 라이브러리 및 프로그램
+## 1. 필요 라이브러리 및 프로그램(로컬에서 실행할 경우만 필요!)
 
 ### 환경
 - for local : Windows 10. python 3.7, conda virtual env
