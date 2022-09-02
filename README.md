@@ -1,6 +1,6 @@
 # BETTer
 **페이지 접속 : http://example-server.shop/**
-
+**repository : https://github.com/chestnut1717/voice_correction_deploy/**
 ![image](https://user-images.githubusercontent.com/62554639/187997853-5cce284f-f17f-4506-89d3-d193365930ef.png)
 
 
