@@ -1,4 +1,4 @@
-# BETTer
+# "BETTer: 청각장애인 대상 영어 발음 교정 서비스"
 
 - **서비스 시연영상** : https://www.youtube.com/watch?v=t5yRbs3hdSM   
 - **페이지 접속 : http://example-server.shop/**   
