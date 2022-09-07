@@ -58,7 +58,7 @@ app = Flask(__name__)
 # main page
 @app.route('/', methods=['GET', 'POST']) 
 def index():
-    # rtvc_conn.wake_server()
+    rtvc_conn.wake_server()
     return render_template('index.html')
 
 
@@ -147,6 +147,6 @@ def audio_download(filename):
 
 
 if __name__=="__main__":
-    rtvc_conn.wake_server()
-    app.run(host="0.0.0.0", port="5000", debug=True)
+    # rtvc_conn.wake_server()
+    app.run(host="0.0.0.0", port="5000", debug=False)
     # wake external model server
