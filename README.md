@@ -1,5 +1,9 @@
 # "BETTer: 청각장애인 대상 영어 발음 교정 서비스"
 
+### 🏆 2022 데이터청년캠퍼스 장관상 수상 프로젝트
+
+* * *
+
 - **서비스 시연영상** : https://www.youtube.com/watch?v=t5yRbs3hdSM   
 - **페이지 접속 : http://example-server.shop/**   
 - **repository : https://github.com/chestnut1717/voice_correction_deploy/**
