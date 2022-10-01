@@ -93,13 +93,13 @@ sudo apt-get update && sudo apt-get install espeak
 * * *
 ## 4. License
 ### 4.1 입모양 영상 파일
-- https://www.bbc.co.uk/worldservice/learningenglish/grammar/pron/
+- https://www.bbc.co.uk/worldservice/learningenglish/grammar/pron/sounds/
 
 ### 4.2 Template
 
 ```
 Template Name: FlexStart
-Template URL: https://www.bbc.co.uk/worldservice/learningenglish/grammar/pron/sounds/
+Template URL: https://bootstrapmade.com/flexstart-bootstrap-startup-template/
 Author: BootstrapMade.com
 License: https://bootstrapmade.com/license/
 ```
