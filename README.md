@@ -5,7 +5,7 @@
 * * *
 
 - **서비스 시연영상** : https://www.youtube.com/watch?v=t5yRbs3hdSM   
-- **페이지 접속 : http://example-server.shop/**   
+- **페이지 접속 : http://example-server.shop/**   (aws ec2 비용 문제로 인해 현재 배포 중단)
 - **repository : https://github.com/chestnut1717/voice_correction_deploy/**
 ![image](https://user-images.githubusercontent.com/62554639/187997853-5cce284f-f17f-4506-89d3-d193365930ef.png)
 
